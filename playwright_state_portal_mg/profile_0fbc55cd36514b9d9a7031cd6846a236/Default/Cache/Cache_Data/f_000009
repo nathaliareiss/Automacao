@@ -1,0 +1,294 @@
+
+
+  jQuery( "iframe" ).hover(
+      function() {
+        
+        window.focus();
+        var monitor = setInterval(function(){
+        var elem = document.activeElement;
+        if(elem && elem.tagName == 'IFRAME'){
+    		
+    		jQuery( ".custom-mm-item" ).removeClass( "show");
+    		jQuery( ".dropdown-menu" ).removeClass( "show");
+    		
+    	    jQuery(".screen-darken").removeClass( "screen-darken" );
+    	    	
+            clearInterval(monitor);
+        }
+        }, 100);
+        
+      }, function() {
+        
+        
+      }
+    );
+   
+   
+    
+    document.addEventListener("DOMContentLoaded", function(){
+        document.querySelectorAll('.navbar .dropdown').forEach(function(everydropdown){
+            everydropdown.addEventListener('shown.bs.dropdown', function () {
+                el_overlay = document.createElement('span');
+                el_overlay.className = 'screen-darken';
+                document.body.appendChild(el_overlay)
+            });
+            everydropdown.addEventListener('hide.bs.dropdown', function () {
+                document.body.removeChild(document.querySelector('.screen-darken'));
+            });
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function(){
+        //Impedir o fechamento do clique dentro do menu suspenso
+        document.querySelectorAll('.dropdown-menu').forEach(function(element){
+            element.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        })
+
+        if (window.innerWidth < 992) {
+            //Fechar todas as listas suspensas internas quando o pai estiver fechado...
+            document.querySelectorAll('.navbar .dropdown').forEach(function(everydropdown){
+                everydropdown.addEventListener('hidden.bs.dropdown', function () {
+                    //Depois que o menu suspenso estiver oculto, encontre todos os submenus...
+                    this.querySelectorAll('.submenu').forEach(function(everysubmenu){
+                    //Ocultar todos os submenus também...
+                    everysubmenu.style.display = 'none';
+                    });
+                })
+            });
+
+            document.querySelectorAll('.dropdown-menu a').forEach(function(element){
+                element.addEventListener('click', function (e) {
+                    let nextEl = this.nextElementSibling;
+
+                    if(nextEl && nextEl.classList.contains('submenu')) {
+                        // prevent opening link if link needs to open dropdown
+                        e.preventDefault();
+                        
+                        if(nextEl.style.display == 'block'){
+                            nextEl.style.display = 'none';
+                        } else {
+                            nextEl.style.display = 'block';
+                        }
+                    }
+                });
+            })
+        }
+    });
+
+    function resetMenu(){
+        document.getElementById("ul-one-one-bl1").style.display="none";
+        document.getElementById("ul-one-two-bl1").style.display="none";
+        document.getElementById("ul-one-three-bl1").style.display="none";
+        document.getElementById("ul-one-four-bl1").style.display="none";
+        document.getElementById("ul-one-five-bl1").style.display="none";
+        document.getElementById("ul-one-six-bl1").style.display="none";
+        document.getElementById("ul-one-seven-bl1").style.display="none";
+        document.getElementById("ul-one-seven-bl2").style.display="none";
+        document.getElementById("ul-two-one-bl1").style.display="none";
+        document.getElementById("ul-two-two-bl1").style.display="none";
+        document.getElementById("ul-two-three-bl1").style.display="none";
+        document.getElementById("ul-three-one-bl1").style.display="none";
+        document.getElementById("ul-three-two-bl1").style.display="none";
+        document.getElementById("ul-three-three-bl1").style.display="none";
+        document.getElementById("ul-three-three-bl2").style.display="none";
+
+        document.getElementById("li-one-one").classList.remove('custom-mm-li-active');
+        document.getElementById("li-one-two").classList.remove('custom-mm-li-active');
+        document.getElementById("li-one-three").classList.remove('custom-mm-li-active');
+        document.getElementById("li-one-four").classList.remove('custom-mm-li-active');
+        document.getElementById("li-one-five").classList.remove('custom-mm-li-active');
+        document.getElementById("li-one-six").classList.remove('custom-mm-li-active');
+        document.getElementById("li-one-seven").classList.remove('custom-mm-li-active');
+        document.getElementById("li-two-one").classList.remove('custom-mm-li-active');
+        document.getElementById("li-two-two").classList.remove('custom-mm-li-active');
+        document.getElementById("li-two-three").classList.remove('custom-mm-li-active');
+        document.getElementById("li-three-one").classList.remove('custom-mm-li-active');
+        document.getElementById("li-three-two").classList.remove('custom-mm-li-active');
+        document.getElementById("li-three-three").classList.remove('custom-mm-li-active');
+    }
+
+    function lookUlOneOne(){
+        document.getElementById("ul-one-one-bl1").style.display="block";
+        document.getElementById("li-one-one").classList.add('custom-mm-li-active');
+        document.getElementById("ul-one-two-bl1").style.display="none";
+        document.getElementById("li-one-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-three-bl1").style.display="none";
+        document.getElementById("li-one-three").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-four-bl1").style.display="none";
+        document.getElementById("li-one-four").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-five-bl1").style.display="none";
+        document.getElementById("li-one-five").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-six-bl1").style.display="none";
+        document.getElementById("li-one-six").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl1").style.display="none";
+        document.getElementById("li-one-seven").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl2").style.display="none";
+    }
+
+    function lookUlOneTwo(){
+        document.getElementById("ul-one-one-bl1").style.display="none";
+        document.getElementById("li-one-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-two-bl1").style.display="block";
+        document.getElementById("li-one-two").classList.add('custom-mm-li-active');
+        document.getElementById("ul-one-three-bl1").style.display="none";
+        document.getElementById("li-one-three").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-four-bl1").style.display="none";
+        document.getElementById("li-one-four").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-five-bl1").style.display="none";
+        document.getElementById("li-one-five").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-six-bl1").style.display="none";
+        document.getElementById("li-one-six").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl1").style.display="none";
+        document.getElementById("li-one-seven").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl2").style.display="none";
+    }
+
+    function lookUlOneThree(){
+        document.getElementById("ul-one-one-bl1").style.display="none";
+        document.getElementById("li-one-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-two-bl1").style.display="none";
+        document.getElementById("li-one-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-three-bl1").style.display="block";
+        document.getElementById("li-one-three").classList.add('custom-mm-li-active');
+        document.getElementById("ul-one-four-bl1").style.display="none";
+        document.getElementById("li-one-four").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-five-bl1").style.display="none";
+        document.getElementById("li-one-five").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-six-bl1").style.display="none";
+        document.getElementById("li-one-six").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl1").style.display="none";
+        document.getElementById("li-one-seven").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl2").style.display="none";
+    }
+
+    function lookUlOneFour(){
+        document.getElementById("ul-one-one-bl1").style.display="none";
+        document.getElementById("li-one-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-two-bl1").style.display="none";
+        document.getElementById("li-one-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-three-bl1").style.display="none";
+        document.getElementById("li-one-three").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-four-bl1").style.display="block";
+        document.getElementById("li-one-four").classList.add('custom-mm-li-active');
+        document.getElementById("ul-one-five-bl1").style.display="none";
+        document.getElementById("li-one-five").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-six-bl1").style.display="none";
+        document.getElementById("li-one-six").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl1").style.display="none";
+        document.getElementById("li-one-seven").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl2").style.display="none";
+    }
+
+    function lookUlOneFive(){
+        document.getElementById("ul-one-one-bl1").style.display="none";
+        document.getElementById("li-one-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-two-bl1").style.display="none";
+        document.getElementById("li-one-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-three-bl1").style.display="none";
+        document.getElementById("li-one-three").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-four-bl1").style.display="none";
+        document.getElementById("li-one-four").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-five-bl1").style.display="block";
+        document.getElementById("li-one-five").classList.add('custom-mm-li-active');
+        document.getElementById("ul-one-six-bl1").style.display="none";
+        document.getElementById("li-one-six").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl1").style.display="none";
+        document.getElementById("li-one-seven").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl2").style.display="none";
+    }
+
+    function lookUlOneSix(){
+        document.getElementById("ul-one-one-bl1").style.display="none";
+        document.getElementById("li-one-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-two-bl1").style.display="none";
+        document.getElementById("li-one-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-three-bl1").style.display="none";
+        document.getElementById("li-one-three").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-four-bl1").style.display="none";
+        document.getElementById("li-one-four").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-five-bl1").style.display="none";
+        document.getElementById("li-one-five").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-six-bl1").style.display="block";
+        document.getElementById("li-one-six").classList.add('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl1").style.display="none";
+        document.getElementById("li-one-seven").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl2").style.display="none";
+    }
+
+    function lookUlOneSeven(){
+        document.getElementById("ul-one-one-bl1").style.display="none";
+        document.getElementById("li-one-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-two-bl1").style.display="none";
+        document.getElementById("li-one-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-three-bl1").style.display="none";
+        document.getElementById("li-one-three").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-four-bl1").style.display="none";
+        document.getElementById("li-one-four").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-five-bl1").style.display="none";
+        document.getElementById("li-one-five").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-six-bl1").style.display="none";
+        document.getElementById("li-one-six").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl1").style.display="block";
+        document.getElementById("li-one-seven").classList.add('custom-mm-li-active');
+        document.getElementById("ul-one-seven-bl2").style.display="block";
+    }
+
+    function lookUlTwoOne(){
+        document.getElementById("ul-two-one-bl1").style.display="block";
+        document.getElementById("li-two-one").classList.add('custom-mm-li-active');
+        document.getElementById("ul-two-two-bl1").style.display="none";
+        document.getElementById("li-two-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-two-three-bl1").style.display="none";
+        document.getElementById("li-two-three").classList.remove('custom-mm-li-active');
+    }
+
+    function lookUlTwoTwo(){
+        document.getElementById("ul-two-one-bl1").style.display="none";
+        document.getElementById("li-two-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-two-two-bl1").style.display="block";
+        document.getElementById("li-two-two").classList.add('custom-mm-li-active');
+        document.getElementById("ul-two-three-bl1").style.display="none";
+        document.getElementById("li-two-three").classList.remove('custom-mm-li-active');
+    }
+
+    function lookUlTwoThree(){
+        document.getElementById("ul-two-one-bl1").style.display="none";
+        document.getElementById("li-two-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-two-two-bl1").style.display="none";
+        document.getElementById("li-two-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-two-three-bl1").style.display="block";
+        document.getElementById("li-two-three").classList.add('custom-mm-li-active');
+    }
+
+    function lookUlThreeOne(){
+        document.getElementById("ul-three-one-bl1").style.display="block";
+        document.getElementById("li-three-one").classList.add('custom-mm-li-active');
+        document.getElementById("ul-three-two-bl1").style.display="none";
+        document.getElementById("li-three-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-three-three-bl1").style.display="none";
+        document.getElementById("li-three-three").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-three-three-bl2").style.display="none";
+    }
+
+    function lookUlThreeTwo(){
+        document.getElementById("ul-three-one-bl1").style.display="none";
+        document.getElementById("li-three-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-three-two-bl1").style.display="block";
+        document.getElementById("li-three-two").classList.add('custom-mm-li-active');
+        document.getElementById("ul-three-three-bl1").style.display="none";
+        document.getElementById("li-three-three").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-three-three-bl2").style.display="none";
+    }
+
+    function lookUlThreeThree(){
+        document.getElementById("ul-three-one-bl1").style.display="none";
+        document.getElementById("li-three-one").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-three-two-bl1").style.display="none";
+        document.getElementById("li-three-two").classList.remove('custom-mm-li-active');
+        document.getElementById("ul-three-three-bl1").style.display="block";
+        document.getElementById("li-three-three").classList.add('custom-mm-li-active');
+        document.getElementById("ul-three-three-bl2").style.display="block";
+    }
+

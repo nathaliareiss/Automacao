@@ -83,7 +83,7 @@ Se eu fosse evoluir este projeto, os próximos passos naturais seriam:
 
 O script não deve conter segredos no código-fonte. Se houver troca de credenciais, o ideal é rotacionar a senha/chave no serviço e revisar o histórico do repositório.
 
-## English
+## English##
 
 This project was built for local, personal use. I am a public servant, and I needed a practical way to collect my own payslips from the last 5 years without going through the whole process by hand every single time. So I built a small Python automation to do exactly that on my machine.
 

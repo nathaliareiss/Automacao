@@ -3,6 +3,8 @@
 !.env.example
 playwright_state_portal_mg/
 downloads_contracheques/
+build/
+dist/
 __pycache__/
 *.pyc
 *.pyo

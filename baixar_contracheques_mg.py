@@ -23,11 +23,12 @@ from playwright.sync_api import (
 from urllib.parse import parse_qs, urlparse, urljoin
 
 APP_NAME = "Assistente-contracheque"
-APP_VERSION = "2.0.5"
+APP_VERSION = "2.0.7"
 PORTAL_URL = "https://www.portaldoservidor.mg.gov.br/"
 BACKEND_URL = "https://gestao-de-carreira-backend-fijuvx-a73918-161-97-80-237.sslip.io"
 UPLOAD_PATH = "/api/financeiro/importacao-temporaria/upload-lote"
-DOWNLOAD_TIMEOUT_MS = 15_000
+DOWNLOAD_TIMEOUT_MS = 30_000
+UPLOAD_BATCH_SIZE = 20
 
 
 @dataclass(frozen=True)
@@ -905,27 +906,41 @@ def enviar_pdfs_ao_backend(pdfs: list[Path], token: str, backend_url: str) -> No
         return
 
     url = f"{backend_url}{UPLOAD_PATH}"
-    arquivos_abertos = []
-    files = []
+    inicio_envio = time.perf_counter()
+    total = len(pdfs)
+    total_lotes = max(1, (total + UPLOAD_BATCH_SIZE - 1) // UPLOAD_BATCH_SIZE)
 
-    try:
-        for pdf in pdfs:
-            handle = pdf.open("rb")
-            arquivos_abertos.append(handle)
-            files.append(("arquivos", (pdf.name, handle, "application/pdf")))
+    for indice_lote, inicio in enumerate(range(0, total, UPLOAD_BATCH_SIZE), start=1):
+        lote_pdfs = pdfs[inicio : inicio + UPLOAD_BATCH_SIZE]
+        arquivos_abertos = []
+        files = []
 
-        print(f"Enviando {len(pdfs)} arquivo(s) para o site...", flush=True)
-        resposta = requests.post(
-            url,
-            headers={"X-Import-Token": token},
-            files=files,
-            timeout=180,
-        )
-        resposta.raise_for_status()
-        print("Envio concluido com sucesso.", flush=True)
-    finally:
-        for handle in arquivos_abertos:
-            handle.close()
+        try:
+            for pdf in lote_pdfs:
+                handle = pdf.open("rb")
+                arquivos_abertos.append(handle)
+                files.append(("arquivos", (pdf.name, handle, "application/pdf")))
+
+            print(
+                f"Enviando lote {indice_lote}/{total_lotes} com {len(lote_pdfs)} arquivo(s)...",
+                flush=True,
+            )
+            resposta = requests.post(
+                url,
+                headers={"X-Import-Token": token},
+                files=files,
+                timeout=300,
+            )
+            resposta.raise_for_status()
+            print(
+                f"Lote {indice_lote}/{total_lotes} enviado em {time.perf_counter() - inicio_envio:.1f}s.",
+                flush=True,
+            )
+        finally:
+            for handle in arquivos_abertos:
+                handle.close()
+
+    print(f"Envio concluido com sucesso em {time.perf_counter() - inicio_envio:.1f}s.", flush=True)
 
 
 def main() -> int:

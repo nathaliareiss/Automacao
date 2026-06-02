@@ -23,7 +23,7 @@ from playwright.sync_api import (
 from urllib.parse import parse_qs, urlparse, urljoin
 
 APP_NAME = "Assistente-contracheque"
-APP_VERSION = "2.0.2"
+APP_VERSION = "2.0.3"
 PORTAL_URL = "https://www.portaldoservidor.mg.gov.br/"
 BACKEND_URL = "https://gestao-de-carreira-backend-fijuvx-a73918-161-97-80-237.sslip.io"
 UPLOAD_PATH = "/api/financeiro/importacao-temporaria/upload-lote"
@@ -230,6 +230,25 @@ def extrair_token_clipboard() -> Optional[str]:
     return texto if token_parece_valido(texto) else None
 
 
+def solicitar_token_interativo() -> Optional[str]:
+    print("Nao consegui receber o token automaticamente do site.", flush=True)
+    print("Cole o token temporario e pressione Enter para continuar:", flush=True)
+
+    try:
+        texto = input("> ").strip()
+    except EOFError:
+        return None
+
+    if not texto:
+        return None
+
+    token_uri = extrair_token_uri(texto)
+    if token_uri:
+        return token_uri
+
+    return texto if token_parece_valido(texto) else None
+
+
 def resolver_token(args: argparse.Namespace) -> tuple[str, str]:
     print(f"[debug] argv_count={len(sys.argv)}", flush=True)
     for i, arg in enumerate(sys.argv):
@@ -260,11 +279,15 @@ def resolver_token(args: argparse.Namespace) -> tuple[str, str]:
         print("[debug] token_recebido=sim", flush=True)
         return token_clipboard, "clipboard"
 
+    token_manual = solicitar_token_interativo()
+    if token_manual:
+        print("[debug] origem_token=manual", flush=True)
+        print("[debug] token_recebido=sim", flush=True)
+        return token_manual, "manual"
+
     print("[debug] origem_token=manual_fallback", flush=True)
     print("[debug] token_recebido=nao", flush=True)
-    print("Nao consegui receber o token automaticamente do site.", flush=True)
     print("Isso indica falha no botao do site ou no protocolo gestaodecarreira://.", flush=True)
-    time.sleep(8)
     raise RuntimeError("Token nao informado.")
 
 

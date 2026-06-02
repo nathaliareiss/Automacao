@@ -273,7 +273,7 @@ def goto_com_retry(
         except Exception as exc:
             ultimo_erro = exc
             print(f"Falha ao abrir {url} (tentativa {i}/{tentativas}): {exc}")
-            page.wait_for_timeout(1500)
+            page.wait_for_timeout(800)
 
     if ultimo_erro:
         raise ultimo_erro
@@ -319,7 +319,7 @@ def fechar_avisos_se_existirem(page: Page) -> None:
             try:
                 if c.count() > 0 and c.first.is_visible():
                     c.first.click(timeout=2000)
-                    page.wait_for_timeout(300)
+                    page.wait_for_timeout(200)
                     return
             except Exception:
                 continue
@@ -327,7 +327,7 @@ def fechar_avisos_se_existirem(page: Page) -> None:
         zk_close = page.locator(".z-window .z-window-close, .z-window-modal .z-window-close")
         if zk_close.count() > 0 and zk_close.first.is_visible():
             zk_close.first.click(timeout=2000)
-            page.wait_for_timeout(300)
+            page.wait_for_timeout(200)
     except Exception:
         pass
 
@@ -403,7 +403,7 @@ def esperar_lista_em_alguma_frame(page: Page, timeout_ms: int):
         except Exception:
             pass
 
-        page.wait_for_timeout(300)
+        page.wait_for_timeout(200)
 
     raise PlaywrightTimeoutError("Timeout aguardando a lista de contracheques.")
 
@@ -462,7 +462,7 @@ def esperar_sair_do_login(page: Page, timeout_ms: int) -> None:
                 print("Aguardando finalizar login/SSO... (URL indisponível)")
             last_print = agora
 
-        page.wait_for_timeout(300)
+        page.wait_for_timeout(200)
 
     raise PlaywrightTimeoutError("Timeout aguardando finalizar login/SSO.")
 
@@ -510,7 +510,7 @@ def abrir_portal_e_autenticar(page: Page, portal_url: str) -> None:
         except Exception:
             pass
 
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(500)
 
     raise RuntimeError(
         "Ainda nao encontrei sua lista de contracheques. "
@@ -552,7 +552,7 @@ def ir_para_lista_de_contracheques(page: Page):
                 if c.count() > 0 and c.first.is_visible():
                     c.first.scroll_into_view_if_needed()
                     c.first.click(timeout=5000)
-                    page.wait_for_timeout(1500)
+                    page.wait_for_timeout(800)
                     break
             except Exception:
                 continue
@@ -570,7 +570,7 @@ def ir_para_lista_de_contracheques(page: Page):
                 if c.count() > 0 and c.first.is_visible():
                     c.first.scroll_into_view_if_needed()
                     c.first.click(timeout=5000)
-                    page.wait_for_timeout(2000)
+                    page.wait_for_timeout(1000)
                     break
             except Exception:
                 continue
@@ -586,7 +586,7 @@ def ir_para_lista_de_contracheques(page: Page):
                 "Ainda nao encontrei sua lista de contracheques."
             )
 
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(500)
 
 def clicar_baixar_na_linha(
     page: Page,
@@ -632,7 +632,7 @@ def clicar_baixar_na_linha(
 
 
 def processar_pagina(page: Page, pasta_mensais: Path, pasta_decimo: Path, vistos: set[str]) -> int:
-    page.wait_for_timeout(300)
+    page.wait_for_timeout(100)
 
     contexto = esperar_lista_em_alguma_frame(page, timeout_ms=20000)
     linhas = localizar_linhas_documento(contexto)
@@ -715,10 +715,10 @@ def ir_para_proxima_pagina(page: Page) -> bool:
         botao.scroll_into_view_if_needed()
         botao.click(timeout=5000)
 
-        page.wait_for_timeout(250)
+        page.wait_for_timeout(100)
 
-        for _ in range(16):
-            page.wait_for_timeout(250)
+        for _ in range(20):
+            page.wait_for_timeout(100)
 
             contexto_depois = encontrar_contexto_lista(page)
             linhas_depois = localizar_linhas_documento(contexto_depois)

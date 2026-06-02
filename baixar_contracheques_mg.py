@@ -23,7 +23,7 @@ from playwright.sync_api import (
 from urllib.parse import parse_qs, urlparse, urljoin
 
 APP_NAME = "Assistente-contracheque"
-APP_VERSION = "2.0.3"
+APP_VERSION = "2.0.5"
 PORTAL_URL = "https://www.portaldoservidor.mg.gov.br/"
 BACKEND_URL = "https://gestao-de-carreira-backend-fijuvx-a73918-161-97-80-237.sslip.io"
 UPLOAD_PATH = "/api/financeiro/importacao-temporaria/upload-lote"
@@ -776,6 +776,7 @@ def processar_pagina(
     context: BrowserContext,
     pasta_mensais: Path,
     pasta_decimo: Path,
+    pasta_extra: Path,
     vistos: set[str],
 ) -> int:
     page.wait_for_timeout(100)
@@ -806,18 +807,22 @@ def processar_pagina(
         if chave in vistos:
             continue
 
-        info = extrair_info_documento(f"{competencia} {tipo}")
+        texto_documento = f"{competencia} {tipo}"
+        info = extrair_info_documento(texto_documento)
 
         pasta_destino = pasta_mensais
         tipo_lower = tipo.lower()
+        texto_lower = texto_documento.lower()
 
-        if info.is_decimo_terceiro or "13" in tipo_lower or "décimo" in tipo_lower or "decimo" in tipo_lower:
+        if "extra" in tipo_lower or "extra" in texto_lower or "abono fardamento" in texto_lower:
+            pasta_destino = pasta_extra
+        elif info.is_decimo_terceiro or "13" in tipo_lower or "décimo" in tipo_lower or "decimo" in tipo_lower:
             pasta_destino = pasta_decimo
-        elif "mensal" in tipo_lower:
-            pasta_destino = pasta_mensais
-        else:
-            print(f"[download] {competencia} | {tipo}: tipo nao reconhecido; pulando.", flush=True)
-            continue
+        elif "mensal" not in tipo_lower:
+            print(
+                f"[download] {competencia} | {tipo}: tipo nao reconhecido; tentando baixar como mensal.",
+                flush=True,
+            )
 
         ok = clicar_baixar_na_linha(
             page=page,
@@ -951,8 +956,10 @@ def main() -> int:
 
     pasta_mensais = download_dir / "mensais"
     pasta_decimo = download_dir / "decimo_terceiro"
+    pasta_extra = download_dir / "extra_abono_fardamento"
     pasta_mensais.mkdir(parents=True, exist_ok=True)
     pasta_decimo.mkdir(parents=True, exist_ok=True)
+    pasta_extra.mkdir(parents=True, exist_ok=True)
 
     vistos: set[str] = set()
 
@@ -980,6 +987,7 @@ def main() -> int:
                         context,
                         pasta_mensais,
                         pasta_decimo,
+                        pasta_extra,
                         vistos,
                     )
                     tempo_pagina = time.perf_counter() - inicio_pagina
@@ -1002,6 +1010,7 @@ def main() -> int:
                 print(f"\nConcluido. Total de arquivos baixados: {total}", flush=True)
                 print(f"Mensais: {pasta_mensais}")
                 print(f"13o: {pasta_decimo}")
+                print(f"Extras e abono fardamento: {pasta_extra}")
                 print(f"{len(pdfs)} contracheques enviados para o site.", flush=True)
                 print("Fechando assistente...", flush=True)
                 time.sleep(5)

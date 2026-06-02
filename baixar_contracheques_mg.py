@@ -20,13 +20,14 @@ from playwright.sync_api import (
     Page,
     sync_playwright,
 )
+from urllib.parse import parse_qs, urlparse, urljoin
 
 APP_NAME = "Assistente-contracheque"
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.0.1"
 PORTAL_URL = "https://www.portaldoservidor.mg.gov.br/"
 BACKEND_URL = "https://gestao-de-carreira-backend-fijuvx-a73918-161-97-80-237.sslip.io"
 UPLOAD_PATH = "/api/financeiro/importacao-temporaria/upload-lote"
-DOWNLOAD_TIMEOUT_MS = 45_000
+DOWNLOAD_TIMEOUT_MS = 15_000
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,43 @@ def carregar_ambiente(args: argparse.Namespace) -> tuple[Path, str, str]:
 
     download_dir.mkdir(parents=True, exist_ok=True)
     return download_dir, backend_url, portal_url
+
+
+def criar_sessao_requests(context: BrowserContext, page: Page) -> requests.Session:
+    sessao = requests.Session()
+
+    try:
+        sessao.headers.update({"User-Agent": page.evaluate("navigator.userAgent")})
+    except Exception:
+        pass
+
+    try:
+        for cookie in context.cookies():
+            sessao.cookies.set(
+                cookie.get("name", ""),
+                cookie.get("value", ""),
+                domain=cookie.get("domain"),
+                path=cookie.get("path", "/"),
+            )
+    except Exception:
+        pass
+
+    return sessao
+
+
+def baixar_url_com_sessao(sessao: requests.Session, url: str, destino: Path) -> None:
+    resposta = sessao.get(url, timeout=DOWNLOAD_TIMEOUT_MS / 1000, stream=True)
+    if not resposta.ok:
+        raise RuntimeError(f"Falha ao baixar {url} ({resposta.status_code}).")
+
+    content_type = (resposta.headers.get("content-type") or "").lower()
+    if "pdf" not in content_type and not url.lower().split("?", 1)[0].endswith(".pdf"):
+        raise RuntimeError(f"Resposta nao parece PDF: {url}")
+
+    with destino.open("wb") as arquivo:
+        for bloco in resposta.iter_content(chunk_size=1024 * 64):
+            if bloco:
+                arquivo.write(bloco)
 
 
 def mascarar_arg(arg: str) -> str:
@@ -128,6 +166,55 @@ def ler_texto_clipboard_windows() -> Optional[str]:
         return None
     finally:
         user32.CloseClipboard()
+
+
+def _resolver_href_baixar(linha, botao, page: Page) -> str | None:
+    candidatos = [
+        botao,
+    ]
+
+    seletores = [
+        "a[href*='pdf' i]",
+        "a[href*='download' i]",
+        "a[href*='contracheque' i]",
+        "a[download]",
+        "a[href]",
+    ]
+
+    for seletor in seletores:
+        try:
+            locator = linha.locator(seletor)
+            if locator.count() > 0:
+                candidatos.append(locator.first)
+        except Exception:
+            continue
+
+    for candidato in candidatos:
+        for atributo in ("href", "data-href", "data-url"):
+            try:
+                valor = candidato.get_attribute(atributo)
+            except Exception:
+                valor = None
+            if isinstance(valor, str) and valor.strip():
+                return valor.strip()
+
+        try:
+            onclick = candidato.get_attribute("onclick")
+        except Exception:
+            onclick = None
+
+        if isinstance(onclick, str) and onclick.strip():
+            correspondencia = re.search(r"""['"]([^'"]+\.pdf[^'"]*)['"]""", onclick, re.I)
+            if correspondencia:
+                return correspondencia.group(1)
+
+    try:
+        if page.url.lower().split("?", 1)[0].endswith(".pdf"):
+            return page.url
+    except Exception:
+        pass
+
+    return None
 
 
 def extrair_token_clipboard() -> Optional[str]:
@@ -590,6 +677,7 @@ def ir_para_lista_de_contracheques(page: Page):
 
 def clicar_baixar_na_linha(
     page: Page,
+    context: BrowserContext,
     linha,
     pasta_destino: Path,
     competencia: str,
@@ -598,6 +686,8 @@ def clicar_baixar_na_linha(
     try:
         nome_base = f"{competencia}_{tipo}".replace("/", "-").replace(" ", "_")
         nome_base = normalizar_nome_arquivo(nome_base)
+        inicio = time.perf_counter()
+        destino = pasta_destino / f"{nome_base}.pdf"
 
         btn = linha.locator("button.btn-outline-primary2", has_text=re.compile(r"baixar", re.I))
         if btn.count() == 0:
@@ -607,9 +697,8 @@ def clicar_baixar_na_linha(
             print(f"[download] {competencia} | {tipo}: botao Baixar nao encontrado; pulando.", flush=True)
             return False
 
-        print(f"Baixando {competencia} - {tipo}...", flush=True)
-
         botao = btn.first
+        print(f"Baixando {competencia} - {tipo}...", flush=True)
         botao.scroll_into_view_if_needed(timeout=5000)
         with page.expect_download(timeout=DOWNLOAD_TIMEOUT_MS) as download_info:
             botao.click(timeout=5000, force=True)
@@ -620,18 +709,52 @@ def clicar_baixar_na_linha(
         destino = pasta_destino / f"{nome_base}{ext}"
         download.save_as(str(destino))
 
-        print(f"Download concluido: {destino.name}", flush=True)
+        print(f"Download concluido: {destino.name} em {time.perf_counter() - inicio:.1f}s", flush=True)
         return True
 
     except PlaywrightTimeoutError:
-        print(f"Tempo esgotado no download: {competencia} - {tipo}", flush=True)
-        return False
+        try:
+            href = _resolver_href_baixar(linha, botao, page)
+        except Exception:
+            href = None
+
+        if not href:
+            print(
+                f"Tempo esgotado no download: {competencia} - {tipo} "
+                f"(nao encontrei link direto)",
+                flush=True,
+            )
+            return False
+
+        try:
+            sessao = criar_sessao_requests(context, page)
+            url = urljoin(page.url, href)
+            baixar_url_com_sessao(sessao, url, destino)
+            print(
+                f"Download concluido via link direto: {destino.name} "
+                f"em {time.perf_counter() - inicio:.1f}s",
+                flush=True,
+            )
+            return True
+        except Exception as exc:
+            print(
+                f"Tempo esgotado no download: {competencia} - {tipo} "
+                f"(fallback falhou: {exc})",
+                flush=True,
+            )
+            return False
     except Exception as exc:
         print(f"Nao consegui baixar {competencia} - {tipo}: {exc}", flush=True)
         return False
 
 
-def processar_pagina(page: Page, pasta_mensais: Path, pasta_decimo: Path, vistos: set[str]) -> int:
+def processar_pagina(
+    page: Page,
+    context: BrowserContext,
+    pasta_mensais: Path,
+    pasta_decimo: Path,
+    vistos: set[str],
+) -> int:
     page.wait_for_timeout(100)
 
     contexto = esperar_lista_em_alguma_frame(page, timeout_ms=20000)
@@ -675,6 +798,7 @@ def processar_pagina(page: Page, pasta_mensais: Path, pasta_decimo: Path, vistos
 
         ok = clicar_baixar_na_linha(
             page=page,
+            context=context,
             linha=linha,
             pasta_destino=pasta_destino,
             competencia=competencia,
@@ -828,7 +952,13 @@ def main() -> int:
                     print(f"\nProcessando pagina {pagina}...", flush=True)
                     inicio_pagina = time.perf_counter()
                     page = encontrar_pagina_com_lista_flexivel(page)
-                    baixados_nesta_pagina = processar_pagina(page, pasta_mensais, pasta_decimo, vistos)
+                    baixados_nesta_pagina = processar_pagina(
+                        page,
+                        context,
+                        pasta_mensais,
+                        pasta_decimo,
+                        vistos,
+                    )
                     tempo_pagina = time.perf_counter() - inicio_pagina
                     total += baixados_nesta_pagina
                     print(

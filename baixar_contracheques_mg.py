@@ -23,7 +23,7 @@ from playwright.sync_api import (
 from urllib.parse import parse_qs, urlparse, urljoin
 
 APP_NAME = "Assistente-contracheque"
-APP_VERSION = "2.0.1"
+APP_VERSION = "2.0.2"
 PORTAL_URL = "https://www.portaldoservidor.mg.gov.br/"
 BACKEND_URL = "https://gestao-de-carreira-backend-fijuvx-a73918-161-97-80-237.sslip.io"
 UPLOAD_PATH = "/api/financeiro/importacao-temporaria/upload-lote"
@@ -962,7 +962,7 @@ def main() -> int:
                     tempo_pagina = time.perf_counter() - inicio_pagina
                     total += baixados_nesta_pagina
                     print(
-                        f"Pagina {pagina} concluida em {tempo_pagina:.1f}s "
+                        f"Processamento da pagina {pagina} em {tempo_pagina:.1f}s "
                         f"| arquivos baixados nesta pagina: {baixados_nesta_pagina}",
                         flush=True,
                     )

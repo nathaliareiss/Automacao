@@ -632,7 +632,7 @@ def clicar_baixar_na_linha(
 
 
 def processar_pagina(page: Page, pasta_mensais: Path, pasta_decimo: Path, vistos: set[str]) -> int:
-    page.wait_for_timeout(1500)
+    page.wait_for_timeout(300)
 
     contexto = esperar_lista_em_alguma_frame(page, timeout_ms=20000)
     linhas = localizar_linhas_documento(contexto)
@@ -715,10 +715,10 @@ def ir_para_proxima_pagina(page: Page) -> bool:
         botao.scroll_into_view_if_needed()
         botao.click(timeout=5000)
 
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(250)
 
-        for _ in range(12):
-            page.wait_for_timeout(500)
+        for _ in range(16):
+            page.wait_for_timeout(250)
 
             contexto_depois = encontrar_contexto_lista(page)
             linhas_depois = localizar_linhas_documento(contexto_depois)
@@ -826,9 +826,16 @@ def main() -> int:
 
                 while True:
                     print(f"\nProcessando pagina {pagina}...", flush=True)
+                    inicio_pagina = time.perf_counter()
                     page = encontrar_pagina_com_lista_flexivel(page)
                     baixados_nesta_pagina = processar_pagina(page, pasta_mensais, pasta_decimo, vistos)
+                    tempo_pagina = time.perf_counter() - inicio_pagina
                     total += baixados_nesta_pagina
+                    print(
+                        f"Pagina {pagina} concluida em {tempo_pagina:.1f}s "
+                        f"| arquivos baixados nesta pagina: {baixados_nesta_pagina}",
+                        flush=True,
+                    )
 
                     avancou = ir_para_proxima_pagina(page)
                     if not avancou:

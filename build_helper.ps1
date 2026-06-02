@@ -53,7 +53,11 @@ if ($pythonExe -eq "py") {
 } else {
     & $pythonExe -m PyInstaller "Assistente-contracheque.spec" --noconfirm --clean
 }
-if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar executavel." }
+
+$exePath = Join-Path $scriptDir "dist\Assistente-contracheque\Assistente-contracheque.exe"
+if (!(Test-Path $exePath)) {
+    throw "Falha ao gerar executavel."
+}
 
 if ($Installer) {
     $isccCandidates = @(
@@ -67,10 +71,12 @@ if ($Installer) {
 
     Write-Host "Gerando setup..."
     & $iscc "installer\Assistente-contracheque.iss"
-    if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar setup." }
+    $setupPath = Join-Path $scriptDir "dist\installer\$setupName"
+    if (!(Test-Path $setupPath)) {
+        throw "Falha ao gerar setup."
+    }
 
     New-Item -ItemType Directory -Force $downloadsDir | Out-Null
-    $setupPath = Join-Path $scriptDir "dist\installer\$setupName"
     Copy-Item -Force $setupPath (Join-Path $downloadsDir $setupName)
     Copy-Item -Force $setupPath (Join-Path $downloadsDir $latestCompatName)
     Write-Host "Setup copiado para downloads:"
